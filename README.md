@@ -1,6 +1,7 @@
 # Reinforcement Learning - Mini Capstone  
 ## Optimizing the Cutting of Flooring in the Cutting Stock Problem  
 ### AI17C - Group 5  
+### Slide report : https://www.canva.com/design/DAGiWMeB0ao/qTcURPkrzyYd1bCbcBKk4Q/edit?utm_content=DAGiWMeB0ao&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton
 
 ## 1. Introduction  
 In manufacturing industries, optimizing material usage is crucial to reducing costs and minimizing waste. The Cutting Stock Problem (CSP) is a classic optimization challenge where large raw materials must be cut into smaller pieces while minimizing leftover waste. This problem is particularly relevant in flooring manufacturing, where efficiently cutting materials can lead to significant economic and environmental benefits.  
