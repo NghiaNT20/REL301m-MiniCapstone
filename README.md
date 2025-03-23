@@ -53,8 +53,8 @@ The Cutting Stock Problem is modeled as a sequential decision-making problem, wh
 ## 7. How to Run the Project  
 Clone the repository:  
 ```sh  
-git clone https://github.com/thanhdanh17/Reinforcement_Learning-Mini_Capstone.git  
-cd reinforcement-learning-cutting-stock  
+git clone https://github.com/NghiaNT20/REL301m-MiniCapstone
+cd REL301m-MiniCapstone
 ```
 
 ## 8. References  
