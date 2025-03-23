@@ -1,5 +1,0 @@
-Episode 0, Reward: 25.5267, Epsilon: 0.9950, Alpha: 0.3000, Steps: 95, Max Q: 1.1190
-Episode 1, Reward: 23.5551, Epsilon: 0.9900, Alpha: 0.2994, Steps: 100, Max Q: 2.0183
-Episode 2, Reward: 23.5551, Epsilon: 0.9851, Alpha: 0.2988, Steps: 100, Max Q: 2.9107
-Episode 3, Reward: 23.5551, Epsilon: 0.9801, Alpha: 0.2982, Steps: 100, Max Q: 3.7473
-Episode 4, Reward: 23.5551, Epsilon: 0.9752, Alpha: 0.2976, Steps: 100, Max Q: 4.5412

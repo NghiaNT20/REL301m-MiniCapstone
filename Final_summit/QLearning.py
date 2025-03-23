@@ -26,8 +26,8 @@ products = [
 os.makedirs("results", exist_ok=True)
 
 # Xóa file log cũ nếu tồn tại để tránh append dữ liệu cũ
-if os.path.exists("results/q_learning_log.txt"):
-    os.remove("results/q_learning_log.txt")
+if os.path.exists("results/q_learning_log1.txt"):
+    os.remove("results/q_learning_log1.txt")
 
 env = CuttingStockEnv(
     render_mode="human",   
@@ -84,12 +84,12 @@ gamma = 0.9
 epsilon = 1.0  
 epsilon_decay = 0.995  
 min_epsilon = 0.01 
-num_episodes = 500  # Số tập huấn luyện
+num_episodes = 100  # Số tập huấn luyện
 min_alpha = 0.1  # Giá trị nhỏ nhất của alpha
 
 # Kích thước Q-table 
-state_size = 10000
-action_size = 500  
+state_size = 100000
+action_size = 1000  
 Q_table = np.zeros((state_size, action_size))
 
 
@@ -151,9 +151,9 @@ def get_action_with_guidance(state, observation):
     """
     Exploration với hướng dẫn dựa trên domain knowledge
     """
-    # 80% thời gian sử dụng Boltzmann exploration
+    # 80% thời gian sử dụng thông thường exploration
     if random.random() < 0.8:
-        return get_action(state)  # Boltzmann exploration
+        return get_action(state)  
     
     # 20% thời gian sử dụng heuristic guidance
     # Trích xuất thông tin từ observation
@@ -324,70 +324,7 @@ for episode in range(num_episodes):
     # Chuyển trạng thái thành số để lưu trong Q-table
     state = get_state(observation)
     
-    # Fix indentation - this code should be properly indented
-        # Ghi log để visualization sau này
-    with open("results/q_learning_log.txt", "a") as log_file:
-        log_file.write(f"Episode {episode}, Reward: {ep_reward:.4f}, Epsilon: {epsilon:.4f}, Steps: {step}\n")
-    
-    # Log chi tiết cho visualization - đặt ngay sau khi ghi log
-    try:
-        # Tạo thư mục results nếu chưa tồn tại
-        os.makedirs("results", exist_ok=True)
-        
-        with open("results/detailed_cutting_log.txt", "a") as detail_log:
-            detail_log.write(f"Episode {episode} starting\n")
-            
-            # Tính toán metrics
-            trim_loss = 0
-            material_usage = 0
-            stocks_used = 0
-            remaining_products = 0
-            
-            # Extract thông tin từ observation
-            if isinstance(observation, dict) and "stocks" in observation:
-                stocks = observation["stocks"]
-                total_stocks = len(stocks)
-                total_area = 0
-                used_area = 0
-                
-                for stock in stocks:
-                    if hasattr(stock, 'shape'):  # Numpy array
-                        stock_area = stock.shape[0] * stock.shape[1]
-                        used_cells = np.sum(stock != -1)
-                        empty_cells = np.sum(stock == -1)
-                        
-                        if np.any(stock != -2):  # Stock đã sử dụng
-                            stocks_used += 1
-                            total_area += stock_area
-                            used_area += used_cells
-                    
-                    elif hasattr(stock, 'width') and hasattr(stock, 'height'):
-                        stock_area = stock.width * stock.height
-                        used_cells = len(getattr(stock, 'used_spaces', set()))
-                        
-                        if used_cells > 0:  # Stock đã sử dụng
-                            stocks_used += 1
-                            total_area += stock_area
-                            used_area += used_cells
-                
-                # Tính material usage và trim loss
-                if total_area > 0:
-                    material_usage = (used_area / total_area) * 100
-                    trim_loss = 100 - material_usage
-            
-            # Đếm remaining products
-            if isinstance(observation, dict) and "products" in observation:
-                remaining_products = len(observation["products"])
-            
-            # Log metrics
-            detail_log.write(f"Trim loss: {trim_loss:.2f}%\n")
-            detail_log.write(f"Material usage: {material_usage:.2f}%\n")
-            detail_log.write(f"Stocks used: {stocks_used}\n")
-            detail_log.write(f"Remaining products: {remaining_products}\n")
-            detail_log.write(f"Episode {episode} complete\n\n")
-    except Exception as e:
-        print(f"Error logging detailed metrics: {e}")
-
+    # Khởi tạo phần thưởng và số bước của episode
     ep_reward = 0  # Khởi tạo phần thưởng của episode
     ep_start_state = state  # Lưu trạng thái bắt đầu
     action_list = []
@@ -466,16 +403,75 @@ for episode in range(num_episodes):
     # Update epsilon
     epsilon = max(min_epsilon, epsilon * epsilon_decay)
     
+    # Ghi log để visualization sau này
+    with open("results/q_learning_log1.txt", "a") as log_file:
+        log_file.write(f"Episode {episode}, Reward: {ep_reward:.4f}, Epsilon: {epsilon:.4f}, Steps: {step}\n")
+    
+    # Log chi tiết cho visualization - đặt ngay sau khi ghi log
+    try:
+        # Tạo thư mục results nếu chưa tồn tại
+        os.makedirs("results", exist_ok=True)
+        
+        with open("results/detailed_cutting_log1.txt", "a") as detail_log:
+            detail_log.write(f"Episode {episode} starting\n")
+            
+            # Tính toán metrics
+            trim_loss = 0
+            material_usage = 0
+            stocks_used = 0
+            remaining_products = 0
+            
+            # Extract thông tin từ observation
+            if isinstance(observation, dict) and "stocks" in observation:
+                stocks = observation["stocks"]
+                total_stocks = len(stocks)
+                total_area = 0
+                used_area = 0
+                
+                for stock in stocks:
+                    if hasattr(stock, 'shape'):  # Numpy array
+                        stock_area = stock.shape[0] * stock.shape[1]
+                        used_cells = np.sum(stock != -1)
+                        empty_cells = np.sum(stock == -1)
+                        
+                        if np.any(stock != -2):  # Stock đã sử dụng
+                            stocks_used += 1
+                            total_area += stock_area
+                            used_area += used_cells
+                    
+                    elif hasattr(stock, 'width') and hasattr(stock, 'height'):
+                        stock_area = stock.width * stock.height
+                        used_cells = len(getattr(stock, 'used_spaces', set()))
+                        
+                        if used_cells > 0:  # Stock đã sử dụng
+                            stocks_used += 1
+                            total_area += stock_area
+                            used_area += used_cells
+                
+                # Tính material usage và trim loss
+                if total_area > 0:
+                    material_usage = (used_area / total_area) * 100
+                    trim_loss = 100 - material_usage
+            
+            # Đếm remaining products
+            if isinstance(observation, dict) and "products" in observation:
+                remaining_products = len(observation["products"])
+            
+            # Log metrics
+            detail_log.write(f"Trim loss: {trim_loss:.2f}%\n")
+            detail_log.write(f"Material usage: {material_usage:.2f}%\n")
+            detail_log.write(f"Stocks used: {stocks_used}\n")
+            detail_log.write(f"Remaining products: {remaining_products}\n")
+            detail_log.write(f"Episode {episode} complete\n\n")
+    except Exception as e:
+        print(f"Error logging detailed metrics: {e}")
+    
     # Lưu lại lịch sử huấn luyện
     rewards_history.append(ep_reward)
     epsilons_history.append(epsilon)
     steps_history.append(step)
 
     print(f"Episode {episode}, Reward: {ep_reward:.4f}, Epsilon: {epsilon:.4f}, Steps: {step}")
-    
-    # Ghi log để visualization sau này
-    with open("results/q_learning_log.txt", "a") as log_file:
-        log_file.write(f"Episode {episode}, Reward: {ep_reward:.4f}, Epsilon: {epsilon:.4f}, Steps: {step}\n")
         
 # Hiển thị kết quả tốt nhất tìm được
 print("\nTraining complete!")
@@ -483,7 +479,7 @@ print(f"Max reward = {max_ep_reward:.4f}")
 print(f"Best sequence length = {len(max_ep_action_list)}")
 
 # Lưu Q-table để sử dụng sau này
-q_table_path = "results/q_table.pkl"
+q_table_path = "results/q_table1.pkl"
 with open(q_table_path, "wb") as f:
     pickle.dump(Q_table, f)
 print(f"Q-table saved to {q_table_path}")
@@ -495,8 +491,8 @@ training_history = pd.DataFrame({
     "Epsilon": epsilons_history,
     "Steps": steps_history
 })
-training_history.to_csv("results/training_history.csv", index=False)
-print("Training history saved to results/training_history.csv")
+training_history.to_csv("results/training_history1.csv", index=False)
+print("Training history saved to results/training_history1.csv")
 
 print("\nReplaying best sequence...")
 
@@ -549,25 +545,30 @@ try:
         "Usage": material_usage,
         "Waste": waste_percentages
     })
-    df_results.to_csv("results/cutting_stock_results.csv", index=False)
-    print("Cutting stock results saved to results/cutting_stock_results.csv")
+    df_results.to_csv("results/cutting_stock_results1.csv", index=False)
+    print("Cutting stock results saved to results/cutting_stock_results1.csv")
 except Exception as e:
     print(f"Error saving cutting stock results: {e}")
 
 # Kiểm tra Q-table đã lưu
 try:
-    with open(q_table_path, "rb") as f:
-        loaded_Q_table = pickle.load(f)
-        
-    # Kiểm tra và hiển thị thông tin về Q-table
-    print("\nQ-table Statistics:")
-    print(f"Shape: {loaded_Q_table.shape}")
-    print(f"Max value: {np.max(loaded_Q_table):.4f}")
-    print(f"Min value: {np.min(loaded_Q_table):.4f}")
-    print(f"Mean value: {np.mean(loaded_Q_table):.4f}")
-    print(f"Non-zero entries: {np.count_nonzero(loaded_Q_table)}")
-    print(f"Sparsity: {1 - np.count_nonzero(loaded_Q_table) / np.size(loaded_Q_table):.4f}")
-    print(f"Size in memory: {loaded_Q_table.nbytes / (1024*1024):.2f} MB")
+    # Kiểm tra xem file tồn tại không trước khi mở
+    if os.path.exists(q_table_path):
+        with open(q_table_path, "rb") as f:
+            loaded_Q_table = pickle.load(f)
+            
+        # Kiểm tra và hiển thị thông tin về Q-table
+        print("\nQ-table Statistics:")
+        print(f"Shape: {loaded_Q_table.shape}")
+        print(f"Max value: {np.max(loaded_Q_table):.4f}")
+        print(f"Min value: {np.min(loaded_Q_table):.4f}")
+        print(f"Mean value: {np.mean(loaded_Q_table):.4f}")
+        print(f"Non-zero entries: {np.count_nonzero(loaded_Q_table)}")
+        print(f"Sparsity: {1 - np.count_nonzero(loaded_Q_table) / np.size(loaded_Q_table):.4f}")
+        print(f"Size in memory: {loaded_Q_table.nbytes / (1024*1024):.2f} MB")
+    else:
+        print("\nQ-table file not found. This could be because the file was not created or was not saved correctly.")
+        print(f"Expected file location: {q_table_path}")
 except Exception as e:
     print(f"Error loading saved Q-table: {e}")
 
