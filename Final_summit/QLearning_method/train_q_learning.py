@@ -6,14 +6,14 @@ import os
 import pandas as pd
 from scipy import ndimage
 
-# Danh sách stocks (width, height) - Tấm nguyên liệu có kích thước nhỏ, tối đa 200x200
+# Định nghĩa 15 tấm nguyên liệu (stocks) với kích thước khác nhau, tối đa 200x200
 stocks = [
     (50, 50),   (60, 40),   (70, 50),   (80, 60),   (90, 70),
     (100, 50),  (110, 60),  (120, 80),  (130, 90),  (140, 100),
     (150, 120), (160, 130), (170, 140), (180, 150), (200, 200)
 ]
 
-# Danh sách products (width, height) - Sản phẩm có kích thước nhỏ, phù hợp với stocks
+# Định nghĩa 30 sản phẩm (products) cần cắt với kích thước khác nhau
 products = [
     (10, 5),  (15, 10), (20, 10), (25, 15), (30, 20),
     (35, 20), (40, 30), (45, 25), (50, 30), (55, 35),
@@ -31,37 +31,37 @@ if os.path.exists("results/q_learning_log.txt"):
     os.remove("results/q_learning_log.txt")
 
 env = CuttingStockEnv(
-    render_mode="human",   
-    max_w=120,           
-    max_h=120,
-    seed=42,
-    stock_list=stocks,
-    product_list=products,
+    render_mode="human",   # Hiển thị môi trường với GUI
+    max_w=120,   # Kích thước tối đa của mỗi stock        
+    max_h=120,   # Kích thước tối đa của mỗi stock  
+    seed=42,     # Seed cho việc tạo ngẫu nhiên
+    stock_list=stocks,# Danh sách stocks
+    product_list=products,# Danh sách products
 )
 
 # Thêm method get_state vào environment
 def get_env_state(self):
     """Convert tuple state from reset/step to dictionary format"""
-    if hasattr(self, 'observation'):
-        return self.observation
+    if hasattr(self, 'observation'): # Kiểm tra xem observation đã được lưu chư, hasattr kiểm tra xem object có attribute hay không?
+        return self.observation # Trả về observation đã lưu nếu có
     
     # Giả định observation từ reset/step là tuple có 2 phần tử
     # Phần tử đầu tiên là stocks, phần tử thứ hai là products
-    reset_result = self.reset()
-    if isinstance(reset_result, tuple):
-        if len(reset_result) > 0:
-            try:
-                # Try to extract stocks and products
+    reset_result = self.reset() # Gọi reset để lấy observation
+    if isinstance(reset_result, tuple): # Kiểm tra xem reset_result có phải là tuple hay không
+        if len(reset_result) > 0: # Kiểm tra xem reset_result có phần tử hay không
+            try:    
+                # Trích xuất thông tin từ tuple
                 stocks_info = []
                 products_info = []
                 
-                # Analyze tuple structure
+                #  Extract stocks info
                 print(f"Reset result length: {len(reset_result)}")
-                
-                if len(reset_result) >= 1:
-                    stocks_info = reset_result[0]
-                if len(reset_result) >= 2:
-                    products_info = reset_result[1]
+                # Lấy thông tin từ phần tử đầu tiên của tuple
+                if len(reset_result) >= 1: 
+                    stocks_info = reset_result[0]   
+                if len(reset_result) >= 2: 
+                    products_info = reset_result[1] 
                 
                 # Create observation dictionary
                 self.observation = {
@@ -76,9 +76,9 @@ def get_env_state(self):
     # Default empty observation
     return {"stocks": [], "products": []}
 
-# Thêm method vào environment
-if not hasattr(env, 'get_state'):
-    setattr(env.__class__, 'get_state', get_env_state)
+# Thêm method get_state vào class environment
+if not hasattr(env, 'get_state'): 
+    setattr(env.__class__, 'get_state', get_env_state) 
 
 # ==================== Tham số huấn luyện ====================
 alpha = 0.3  # Learning rate ban đầu cao hơn
@@ -106,37 +106,37 @@ def get_improved_state(observation):
     """
     Cải thiện state representation để capture thông tin quan trọng hơn
     """
-    if isinstance(observation, tuple):
-        observation = env.get_state()
+    if isinstance(observation, tuple): # Kiểm tra xem observation có phải là tuple hay không
+        observation = env.get_state() # Chuyển observation từ tuple sang dictionary
     
-    if not isinstance(observation, dict):
-        return random.randint(0, state_size - 1)
+    if not isinstance(observation, dict): # Kiểm tra xem observation có phải là dictionary hay không
+        return random.randint(0, state_size - 1) # Trả về state ngẫu nhiên nếu không xác định được observation
     
     # 1. Trích xuất thông tin về stocks
-    stocks_info = []
-    if "stocks" in observation:
-        stocks = observation["stocks"]
+    stocks_info = [] 
+    if "stocks" in observation: 
+        stocks = observation["stocks"] # Lấy thông tin stocks từ observation
         for stock in stocks:
-            if hasattr(stock, 'shape'):
+            if hasattr(stock, 'shape'): # Kiểm tra xem stock có attribute shape hay không
                 # Tính phần trăm diện tích đã sử dụng
-                total_cells = stock.shape[0] * stock.shape[1]
-                used_cells = np.sum(stock != -1)
-                utilization = min(int(used_cells * 10 / total_cells), 9)
+                total_cells = stock.shape[0] * stock.shape[1] # Tính tổng số ô trong stock
+                used_cells = np.sum(stock != -1) # Đếm số ô đã sử dụng
+                utilization = min(int(used_cells * 10 / total_cells), 9) # Chia tỷ lệ sử dụng cho 10 và giới hạn tối đa là 9
                 
                 # Tính fragmentation (mức độ phân mảnh)
                 try:
-                    empty_mask = (stock == -1)
-                    labeled, num_fragments = ndimage.label(empty_mask)
-                    fragmentation = min(num_fragments, 9)
+                    empty_mask = (stock == -1) # Tạo mask cho ô trống
+                    labeled, num_fragments = ndimage.label(empty_mask) # Đánh nhãn các vùng trống
+                    fragmentation = min(num_fragments, 9)   # Giới hạn tối đa là 9
                 except:
-                    fragmentation = 0
+                    fragmentation = 0 
                 
-                stocks_info.append((utilization, fragmentation))
-            elif hasattr(stock, 'width') and hasattr(stock, 'height'):
+                stocks_info.append((utilization, fragmentation)) # Lưu thông tin vào list
+            elif hasattr(stock, 'width') and hasattr(stock, 'height'): 
                 # Tương tự cho non-numpy stock
-                total_area = stock.width * stock.height
-                used_area = len(getattr(stock, 'used_spaces', set()))
-                utilization = min(int(used_area * 10 / total_area), 9)
+                total_area = stock.width * stock.height     # Tính diện tích toàn bộ stock
+                used_area = len(getattr(stock, 'used_spaces', set())) # Đếm số ô đã sử dụng
+                utilization = min(int(used_area * 10 / total_area), 9) # Tính tỷ lệ sử dụng và giới hạn tối đa là 9
                 stocks_info.append((utilization, 0))  # Không thể tính fragmentation
     
     # 2. Trích xuất thông tin về products
@@ -152,7 +152,7 @@ def get_improved_state(observation):
                 w, h = prod["size"]
                 total_product_area += w * h
         
-        # Normalize area
+        # Diện tích normalized (giới hạn tối đa 9)
         normalized_area = min(int(total_product_area / 1000), 9)
         products_info.append(normalized_area)
         
@@ -165,17 +165,17 @@ def get_improved_state(observation):
     
     # Add stocks information
     for i, (util, frag) in enumerate(stocks_info[:5]):  # Giới hạn 5 stocks
-        state_hash = state_hash * 100 + util * 10 + frag
+        state_hash = state_hash * 100 + util * 10 + frag # Lưu utilization và fragmentation
     
     # Add products information
     for info in products_info:
-        state_hash = state_hash * 10 + info
+        state_hash = state_hash * 10 + info # Lưu normalized area và số lượng products
     
     # Map to state space
-    return state_hash % state_size
+    return state_hash % state_size # Giới hạn kích thước state space
 
 # Sử dụng get_improved_state thay cho get_state
-def get_state(observation_tuple):
+def get_state(observation_tuple): 
     """
     Chuyển trạng thái từ môi trường thành dạng số nguyên để lưu vào Q-table.
     Bây giờ gọi get_improved_state để có state representation tốt hơn.
@@ -224,52 +224,52 @@ def get_action_with_guidance(state, observation):
     Exploration với hướng dẫn dựa trên domain knowledge
     """
     # Trích xuất thông tin từ observation
-    if isinstance(observation, dict) and "products" in observation and "stocks" in observation:
-        products = observation["products"]
-        stocks = observation["stocks"]
+    if isinstance(observation, dict) and "products" in observation and "stocks" in observation: # Kiểm tra xem observation có chứa thông tin cần thiết không
+        products = observation["products"] # Lấy thông tin products
+        stocks = observation["stocks"] # Lấy thông tin stocks
         
         # Heuristic 1: Sắp xếp sản phẩm lớn trước
-        largest_product_idx = -1
-        max_area = 0
+        largest_product_idx = -1 # Chưa chọn sản phẩm nào
+        max_area = 0 # Diện tích lớn nhất
         
-        for i, prod in enumerate(products):
-            if isinstance(prod, tuple) and len(prod) >= 2:
-                area = prod[0] * prod[1]
-                if area > max_area:
-                    max_area = area
-                    largest_product_idx = i
-            elif isinstance(prod, dict) and "size" in prod:
-                size = prod["size"]
+        for i, prod in enumerate(products): # Duyệt qua tất cả sản phẩm
+            if isinstance(prod, tuple) and len(prod) >= 2: # Kiểm tra xem sản phẩm có định dạng tuple không
+                area = prod[0] * prod[1] # Tính diện tích sản phẩm
+                if area > max_area: # So sánh diện tích với diện tích lớn nhất
+                    max_area = area # Cập nhật diện tích lớn nhất
+                    largest_product_idx = i # Cập nhật index của sản phẩm lớn nhất
+            elif isinstance(prod, dict) and "size" in prod: # Kiểm tra xem sản phẩm có định dạng dictionary không
+                size = prod["size"] # Lấy kích thước sản phẩm
                 area = size[0] * size[1]
                 if area > max_area:
                     max_area = area
-                    largest_product_idx = i
+                    largest_product_idx = i # Cập nhật index của sản phẩm lớn nhất
         
         # Heuristic 2: Chọn stock có nhiều không gian nhất
-        best_stock_idx = 0
+        best_stock_idx = 0 
         max_empty = 0
         
-        for i, stock in enumerate(stocks):
-            if hasattr(stock, 'shape'):
+        for i, stock in enumerate(stocks): # Duyệt qua tất cả stocks
+            if hasattr(stock, 'shape'): # Kiểm tra xem stock có attribute shape không
                 empty_space = np.sum(stock == -1)
                 if empty_space > max_empty:
                     max_empty = empty_space
                     best_stock_idx = i
             elif hasattr(stock, 'width') and hasattr(stock, 'height'):
-                empty_space = stock.width * stock.height - len(getattr(stock, 'used_spaces', set()))
-                if empty_space > max_empty:
-                    max_empty = empty_space
+                empty_space = stock.width * stock.height - len(getattr(stock, 'used_spaces', set())) # Tính không gian trống
+                if empty_space > max_empty: # So sánh với không gian trống lớn nhất
+                    max_empty = empty_space # Cập nhật không gian trống lớn nhất
                     best_stock_idx = i
         
         # Tạo action từ heuristics
         if largest_product_idx >= 0:
             # Transform to Q-table action space
-            return (best_stock_idx * len(products) + largest_product_idx) % action_size
+            return (best_stock_idx * len(products) + largest_product_idx) % action_size # Chuyển đổi thành action trong Q-table
     
     # Fallback to random action
-    return random.randint(0, action_size - 1)
+    return random.randint(0, action_size - 1) # Trả về action ngẫu nhiên nếu không xác định được action
 
-def update_q_value_with_exploration_bonus(state, action, next_state, reward, episode):
+def update_q_value_with_exploration_bonus(state, action, next_state, reward, episode): 
     """
     Cập nhật Q-value với exploration bonus và learning rate giảm dần
     """
@@ -475,10 +475,10 @@ max_ep_action_list = []  # Danh sách hành động tương ứng với phần t
 max_start_state = None  # Trạng thái bắt đầu tương ứng với phần thưởng cao nhất
 
 # Lưu lại lịch sử huấn luyện cho visualization
-rewards_history = []
-epsilons_history = []
-alphas_history = []
-steps_history = []
+rewards_history = []    # Theo dõi phần thưởng theo thời gian
+epsilons_history = []   # Theo dõi epsilon theo thời gian
+alphas_history = [] # Theo dõi learning rate theo thời gian
+steps_history = [] # Số bước trong mỗi episode
 q_values_history = []  # Theo dõi max Q-value theo thời gian
 
 # ==================== Vòng lặp huấn luyện chính ====================
@@ -505,15 +505,15 @@ for episode in range(num_episodes):
     ep_start_state = state  # Lưu trạng thái bắt đầu
     action_list = []
 
-    done = False
-    step = 0
+    done = False # Biến kết thúc episode
+    step = 0 
     max_steps = 100  # Giới hạn số bước để tránh vòng lặp vô hạn
     
     # Điều chỉnh reward scale theo tiến trình
     reward_scale = adjust_reward_scale(episode, num_episodes)
     
     # Current learning rate
-    current_alpha = max(min_alpha, alpha * (alpha_decay ** episode))
+    current_alpha = max(min_alpha, alpha * (alpha_decay ** episode)) # Decay learning rate
 
     while not done and step < max_steps:
         # Chọn action với chiến lược khám phá cải tiến
@@ -534,12 +534,12 @@ for episode in range(num_episodes):
                 elif len(step_result) >= 4:  # gym format cũ
                     observation, reward_terminal, done, info = step_result
                 elif len(step_result) == 3:  # format đơn giản
-                    observation, reward_terminal, done = step_result
+                    observation, reward_terminal, done = step_result 
                     info = {}
                 else:
                     # Format không xác định
                     observation = step_result[0] if len(step_result) > 0 else observation
-                    reward_terminal = 0
+                    reward_terminal = 0 # Không có phần thưởng kết thúc
                     done = False
                     info = {}
             else:
